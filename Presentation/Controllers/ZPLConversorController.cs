@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Domain.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,14 +17,27 @@ public class ZPLConversorController : ControllerBase
   }
 
   [HttpPost]
-  public IActionResult ZPLToPDF(IFormFile zpl)
+  public async Task<IActionResult> ZPLToPDF(IFormFile zpl)
   {
-    using var sr = new StreamReader(zpl.OpenReadStream());
+    try
+    {
+      using var sr = new StreamReader(zpl.OpenReadStream());
 
-    var fileType = "application/pdf";
+      var fileType = "application/pdf";
 
-    var fileName = $"{Guid.NewGuid()}.pdf";
+      var fileName = $"{Guid.NewGuid()}.pdf";
 
-    return File(_zplConverterService.ZPLToPDF(sr.ReadToEnd()), fileType, fileName);
+      var zplContent = await sr.ReadToEndAsync();
+
+      return File(_zplConverterService.ZPLToPDF(zplContent), fileType, fileName);
+    }
+    catch (Exception ex)
+    {
+      var errorJSON = JsonSerializer.Serialize(new { Message = ex.Message, StackTrace = ex.StackTrace, Source = ex.Source });
+
+      _logger.LogError(errorJSON);
+
+      return BadRequest(errorJSON);
+    }
   }
 }

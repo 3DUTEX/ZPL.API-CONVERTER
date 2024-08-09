@@ -11,7 +11,16 @@ public class ZPLConverterService : IZPLConverterService
 {
   public byte[] ZPLToPDF(string zplContent)
   {
-    var zpls = SplitZpls(zplContent);
+    List<string> zpls = [];
+
+    if (zplContent.Contains("~DGR:DEMO.GRF"))
+    {
+      zpls = SplitZpls(zplContent);
+    }
+    else
+    {
+      zpls.Add(zplContent);
+    }
 
     var pdfs = new List<byte[]>();
 
